@@ -26,15 +26,21 @@ int main(){
         perror("connect");
         exit(EXIT_FAILURE);
     }
-    
+
     printf("Client is connected to the server\n");
 
-    char msg[] = "Hello Server\n";
-    write(client_fd, msg, strlen(msg));
-    printf("Client sent message to server\n");
+    char request[] = "GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n";
+    write(client_fd, request, strlen(request));
+    char buffer[1024];
+    int bytes_read = read(client_fd, buffer, sizeof(buffer)-1);
+    if(bytes_read > 0){
+        buffer[bytes_read] = '\0';
+        printf("Client receieved - %s\n", buffer);
+    }
 
-
-    
+    else{
+        printf("Didn't recieve any message\n");
+    }
 
     return 0;
 }

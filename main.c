@@ -4,6 +4,11 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <fcntl.h>
+
+void parse_http_request(const char *request, char *method, char *path) {
+    sscanf(request, "%s /%s", method, path);
+}
 
 
 int main(){
@@ -40,16 +45,24 @@ int main(){
         exit(EXIT_FAILURE);
     }
     printf("Connection between the client and the server has been established\n");
-    char buffer[1024];
-    int bytes_read = read(client_fd, buffer, sizeof(buffer)-1);
-    if(bytes_read > 0){
-        buffer[bytes_read] = '\0';
-        printf("Server receieved - %s\n", buffer);
+    char buffer[4096] = {0};
+    read(client_fd, buffer, sizeof(buffer));  // Read request into buffer
+
+    char method[8], path[1024];
+    parse_http_request(buffer, method, path);
+
+    printf("Method: %s\n", method);  // should print "GET"
+    printf("Path: %s\n", path);      // should print "/hello.html"
+
+
+    int req_file = open(path, O_RDONLY);
+    if(req_file == -1){
+        perror("could not open file");
+        exit(EXIT_FAILURE);
     }
 
-    else{
-        printf("Didn't recieve any message\n");
-    }
-
+    char file_content[4096];
+    int bytes_read = read(req_file, file_content, sizeof(file_content));
+    write(client_fd, file_content, strlen(file_content));
     return 0;
 }
